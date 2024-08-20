@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+import 'package:phidrillsim_app/twoDplot.dart';
+
 class CalculationTable extends StatelessWidget {
   final Map<String, String>? surfaceLocation;
   final List<Map<String, String>>? targets;
@@ -102,6 +104,7 @@ class CalculationTable extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Analysis Breakdown"),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
@@ -126,8 +129,8 @@ class CalculationTable extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => Scaffold(
-                    appBar: AppBar(title: Text("3D Plot Placeholder")),
-                    body: Center(child: Text("3D Plot Page Placeholder")),
+                    appBar: AppBar(title: Text("2D Plot")),
+                    body: PlottingPage(),
                   )),
                 );
               },
