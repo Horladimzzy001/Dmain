@@ -81,7 +81,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
                 DataColumn(label: Text('Northern')),
                 DataColumn(label: Text('Eastern')),
                 DataColumn(label: Text('TVD')),
-                DataColumn(label: Text('Actions')),
+                DataColumn(label: Text('')),
               ],
               rows: [
                 DataRow(cells: [
@@ -172,7 +172,7 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
               child: TextField(
                 controller: _kopController,
                 decoration: InputDecoration(
-                  labelText: "KOP",
+                  labelText: "Kick Off Point",
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
