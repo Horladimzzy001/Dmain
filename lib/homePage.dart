@@ -21,6 +21,13 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+
+    // Initialize _targets with a default target location
+    _targets.add({
+      "northern": TextEditingController(),
+      "eastern": TextEditingController(),
+      "tvd": TextEditingController(),
+    });
   }
 
   @override
@@ -63,130 +70,161 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   }
 
   Widget _buildInputTab() {
-    return Padding(
-      padding: EdgeInsets.all(10),
-      child: ListView(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Text(
-              'Surface Location',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return SingleChildScrollView(  // Enable vertical scrolling
+      child: Padding(
+        padding: EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Text(
+                'Surface Location',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: [
-                DataColumn(label: Text('Northern')),
-                DataColumn(label: Text('Eastern')),
-                DataColumn(label: Text('TVD')),
-                DataColumn(label: Text('')),
-              ],
-              rows: [
-                DataRow(cells: [
-                  DataCell(TextField(
-                    controller: _surfaceLocation["northern"],
-                    decoration: InputDecoration(
-                      labelText: "Northern (Surface)",
-                    ),
-                    keyboardType: TextInputType.number,
-                  )),
-                  DataCell(TextField(
-                    controller: _surfaceLocation["eastern"],
-                    decoration: InputDecoration(
-                        labelText: "Eastern (Surface)"),
-                    keyboardType: TextInputType.number,
-                  )),
-                  DataCell(TextField(
-                    controller: _surfaceLocation["tvd"],
-                    decoration: InputDecoration(
-                        labelText: "TVD (Surface)"),
-                    keyboardType: TextInputType.number,
-                  )),
-                  DataCell(Container()), // No delete button for surface location
-                ]),
-              ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columns: [
+                  DataColumn(label: Text('Northern')),
+                  DataColumn(label: Text('Eastern')),
+                  DataColumn(label: Text('TVD')),
+                  DataColumn(label: Text('')),
+                ],
+                rows: [
+                  DataRow(cells: [
+                    DataCell(TextField(
+                      controller: _surfaceLocation["northern"],
+                      decoration: InputDecoration(
+                        labelText: "Northern (Surface)",
+                      ),
+                      keyboardType: TextInputType.number,
+                    )),
+                    DataCell(TextField(
+                      controller: _surfaceLocation["eastern"],
+                      decoration: InputDecoration(
+                          labelText: "Eastern (Surface)"),
+                      keyboardType: TextInputType.number,
+                    )),
+                    DataCell(TextField(
+                      controller: _surfaceLocation["tvd"],
+                      decoration: InputDecoration(
+                          labelText: "TVD (Surface)"),
+                      keyboardType: TextInputType.number,
+                    )),
+                    DataCell(Container()), // No delete button for surface location
+                  ]),
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              'Target Location',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20.0), // Add padding between sections
+              child: Text(
+                'Target Location',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: [
-                DataColumn(label: Text('Northern')),
-                DataColumn(label: Text('Eastern')),
-                DataColumn(label: Text('TVD')),
-                DataColumn(label: Text('Actions')),
-              ],
-              rows: _targets.map((location) {
+            Column(
+              children: _targets.map((location) {
                 int index = _targets.indexOf(location);
-                return DataRow(cells: [
-                  DataCell(TextField(
-                      controller: location["northern"],
-                      decoration: InputDecoration(
-                          labelText: "Northern (Target)"),keyboardType: TextInputType.number,),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columns: [
+                        DataColumn(label: Text('Northern')),
+                        DataColumn(label: Text('Eastern')),
+                        DataColumn(label: Text('TVD')),
+                        DataColumn(label: Text('Actions')),
+                      ],
+                      rows: [
+                        DataRow(cells: [
+                          DataCell(TextField(
+                            controller: location["northern"],
+                            decoration: InputDecoration(
+                                labelText: "Northern (Target)"),
+                            keyboardType: TextInputType.number,
+                          )),
+                          DataCell(TextField(
+                            controller: location["eastern"],
+                            decoration: InputDecoration(
+                                labelText: "Eastern (Target)"),
+                            keyboardType: TextInputType.number,
+                          )),
+                          DataCell(TextField(
+                            controller: location["tvd"],
+                            decoration: InputDecoration(
+                                labelText: "TVD (Target)"),
+                            keyboardType: TextInputType.number,
+                          )),
+                          DataCell(IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () => _removeLocation(index),
+                          )),
+                        ]),
+                      ],
+                    ),
                   ),
-                  DataCell(TextField(
-                      controller: location["eastern"],
-                      decoration: InputDecoration(
-                          labelText: "Eastern (Target)"),keyboardType: TextInputType.number,),
-                  ),
-                  DataCell(TextField(
-                      controller: location["tvd"],
-                      decoration: InputDecoration(
-                          labelText: "TVD (Target)"),keyboardType: TextInputType.number,),
-                  ),
-                  DataCell(IconButton(
-                    icon: Icon(Icons.delete),
-                    onPressed: () => _removeLocation(index),
-                  )),
-                ]);
+                );
               }).toList(),
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Text("Enable KOP:"),
-              Switch(
-                value: _kopEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _kopEnabled = value;
-                    if (!_kopEnabled) _kopController.clear();
-                  });
-                },
-              ),
-            ],
-          ),
-          if (_kopEnabled)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: TextField(
-                controller: _kopController,
-                decoration: InputDecoration(
-                  labelText: "Kick Off Point",
-                  border: OutlineInputBorder(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text("Enable KOP:"),
+                Switch(
+                  value: _kopEnabled,
+                  onChanged: (value) {
+                    setState(() {
+                      _kopEnabled = value;
+                      if (!_kopEnabled) _kopController.clear();
+                    });
+                  },
                 ),
-                keyboardType: TextInputType.number,
+              ],
+            ),
+            if (_kopEnabled)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: TextField(
+                  controller: _kopController,
+                  decoration: InputDecoration(
+                    labelText: "Kick Off Point",
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            // Centering the "Add Target Location" button
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Center(
+                child: ElevatedButton.icon(
+                  onPressed: _addLocation,
+                  icon: Icon(Icons.add),
+                  label: Text("Add Target Location"),
+                ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: ElevatedButton.icon(
-              onPressed: _addLocation,
-              icon: Icon(Icons.add),
-              label: Text("Add Target Location"),
+            // Centering the "Data" button
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Switch to the "View Data" tab
+                    setState(() {
+                      _tabController.index = 1;
+                    });
+                  },
+                  child: Text("Data"),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
