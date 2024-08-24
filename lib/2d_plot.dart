@@ -13,7 +13,6 @@ class Plot2D extends StatefulWidget {
 class _Plot2DState extends State<Plot2D> {
   String? selectedXAxis;
   String? selectedYAxis;
-  List<String> variables = ["Northern", "Eastern", "TVD", "Measured Depth", "Inclination", "Azimuth", "Dogleg"];
 
   @override
   Widget build(BuildContext context) {
@@ -22,133 +21,140 @@ class _Plot2DState extends State<Plot2D> {
         title: Text('2D Plot'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // X-Axis Selector
-            Text('Select X-Axis:', style: TextStyle(fontSize: 18)),
-            DropdownButton<String>(
-              value: selectedXAxis,
-              hint: Text('Choose X-Axis'),
-              isExpanded: true,
-              items: variables.map((String variable) {
-                return DropdownMenuItem<String>(
-                  value: variable,
-                  child: Text(variable),
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                setState(() {
-                  selectedXAxis = newValue;
-                });
-              },
-            ),
-            SizedBox(height: 16),
-            // Y-Axis Selector
-            Text('Select Y-Axis:', style: TextStyle(fontSize: 18)),
-            DropdownButton<String>(
-              value: selectedYAxis,
-              hint: Text('Choose Y-Axis'),
-              isExpanded: true,
-              items: variables.map((String variable) {
-                return DropdownMenuItem<String>(
-                  value: variable,
-                  child: Text(variable),
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                setState(() {
-                  selectedYAxis = newValue;
-                });
-              },
-            ),
-            SizedBox(height: 32),
-            // Plot Button
-            Center(
-              child: ElevatedButton(
-                onPressed: (selectedXAxis != null && selectedYAxis != null) ? _plotGraph : null,
-                child: Text('Plot Graph'),
-              ),
-            ),
-            SizedBox(height: 32),
-            // Display Graph
-            if (selectedXAxis != null && selectedYAxis != null)
-              Expanded(
-                child: _buildGraph(),
-              ),
-          ],
-        ),
+      body: Column(
+        children: [
+          ElevatedButton(
+            onPressed: _showAxisSelectionDialog,
+            child: Center(child: Text("Plot 2D Graph")),
+          ),
+          if (selectedXAxis != null && selectedYAxis != null)
+            Expanded(child: _build2DPlot())
+        ],
       ),
     );
   }
 
-  void _plotGraph() {
-    setState(() {
-      // Trigger a rebuild to display the graph
-    });
+  void _showAxisSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select Axes'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButton<String>(
+                hint: Text("Select X Axis"),
+                value: selectedXAxis,
+                onChanged: (value) {
+                  setState(() {
+                    selectedXAxis = value!;
+                  });
+                },
+                items: _getVariableNames().map((String axis) {
+                  return DropdownMenuItem<String>(
+                    value: axis,
+                    child: Text(axis),
+                  );
+                }).toList(),
+              ),
+              DropdownButton<String>(
+                hint: Text("Select Y Axis"),
+                value: selectedYAxis,
+                onChanged: (value) {
+                  setState(() {
+                    selectedYAxis = value!;
+                  });
+                },
+                items: _getVariableNames().map((String axis) {
+                  return DropdownMenuItem<String>(
+                    value: axis,
+                    child: Text(axis),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Plot"),
+            )
+          ],
+        );
+      },
+    );
   }
 
-  Widget _buildGraph() {
-    List<FlSpot> spots = _generateSpots();
-
+  Widget _build2DPlot() {
     return LineChart(
       LineChartData(
-        lineBarsData: [
-          LineChartBarData(
-            spots: spots,
-            isCurved: true,
-            barWidth: 2,
-            color: Colors.blue, // Corrected to 'color'
-          ),
-        ],
-        titlesData: FlTitlesData(
+        gridData: const FlGridData(show: true),
+        titlesData: const FlTitlesData(
           leftTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+            sideTitles: SideTitles(showTitles: true, interval: 1),
           ),
           bottomTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+            sideTitles: SideTitles(showTitles: true, interval: 1),
           ),
         ),
         borderData: FlBorderData(show: true),
+        lineBarsData: [
+          LineChartBarData(
+            spots: _generatePlotSpots(),
+            isCurved: true,
+            color: Colors.blue,  // Corrected to use `colors`
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: FlDotData(show: false),
+          ),
+        ],
       ),
     );
   }
 
-  List<FlSpot> _generateSpots() {
+  List<FlSpot> _generatePlotSpots() {
     List<FlSpot> spots = [];
-
     for (var row in widget.data) {
+      print('Row: $row');  // Debugging: Print each row of data
+
       double? xValue = _getValueFromVariable(row, selectedXAxis!);
       double? yValue = _getValueFromVariable(row, selectedYAxis!);
+
+      print('X: $xValue, Y: $yValue');  // Debugging: Print values for the selected axes
 
       if (xValue != null && yValue != null) {
         spots.add(FlSpot(xValue, yValue));
       }
     }
-
+    print('Generated spots: $spots');  // Debugging: Print the generated spots
     return spots;
   }
 
   double? _getValueFromVariable(Map<String, dynamic> row, String variable) {
     switch (variable) {
       case "Northern":
-        return (row["northern"] != null) ? row["northern"].toDouble() : null;
+        return row["northern"]?.toDouble();
       case "Eastern":
-        return (row["eastern"] != null) ? row["eastern"].toDouble() : null;
+        return row["eastern"]?.toDouble();
       case "TVD":
-        return (row["tvd"] != null) ? row["tvd"].toDouble() : null;
+        return row["tvd"]?.toDouble();
       case "Measured Depth":
-        return (row["md"] != null) ? row["md"].toDouble() : null;
+        return row["md"]?.toDouble();
       case "Inclination":
-        return (row["inclination"] != null) ? row["inclination"].toDouble() : null;
+        return row["inclination"]?.toDouble();
       case "Azimuth":
-        return (row["azimuth"] != null) ? row["azimuth"].toDouble() : null;
+        return row["azimuth"]?.toDouble();
       case "Dogleg":
-        return (row["dogleg"] != null) ? row["dogleg"].toDouble() : null;
+        return row["dogleg"]?.toDouble();
       default:
         return null;
     }
+  }
+
+  List<String> _getVariableNames() {
+    return ["Northern", "Eastern", "TVD", "Measured Depth", "Inclination", "Azimuth", "Dogleg"];
   }
 }

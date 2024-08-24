@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '2d_plot.dart';
 
 class CalculationTable extends StatelessWidget {
   final Map<String, String> surfaceLocation;
@@ -43,7 +44,7 @@ class CalculationTable extends StatelessWidget {
             _buildKopAndWellPathTable(calculatedKop, calculatedData),
             SizedBox(height: 32),
             // Buttons
-            _buildButtons(context),
+            _buildButtons(context, calculatedKop, calculatedData),
           ],
         ),
       ),
@@ -164,7 +165,7 @@ class CalculationTable extends StatelessWidget {
     );
   }
 
-  Widget _buildButtons(BuildContext context) {
+  Widget _buildButtons(BuildContext context, double kop, List<Map<String, dynamic>> data) {
     return Center(
       child: Column(
         children: [
@@ -177,7 +178,13 @@ class CalculationTable extends StatelessWidget {
           SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
-              // Handle 2D Plot (to be implemented later)
+              // Navigate to the 2D Plot screen and pass the calculated data
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Plot2D(data: data),
+                ),
+              );
             },
             child: Text("2D Plot"),
           ),
