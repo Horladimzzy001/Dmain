@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '2d_plot.dart';
+import "dart:math";
 
 class CalculationTable extends StatelessWidget {
   final Map<String, String> surfaceLocation;
@@ -16,6 +17,19 @@ class CalculationTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ensure that surfaceLocation and targets are not null or empty
+    if (surfaceLocation.isEmpty) {
+      return Center(
+        child: Text('Error: Surface location data is missing.'),
+      );
+    }
+    
+    if (targets.isEmpty) {
+      return Center(
+        child: Text('Error: Target data is missing.'),
+      );
+    }
+
     // Calculate KOP if not provided
     double calculatedKop = kopEnabled ? kopValue : calculateKOP();
 
@@ -69,9 +83,9 @@ class CalculationTable extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Northern: ${surfaceLocation["northern"]}'),
-                Text('Eastern: ${surfaceLocation["eastern"]}'),
-                Text('TVD: ${surfaceLocation["tvd"]}'),
+                Text('Northern: ${surfaceLocation["northern"] ?? "0"}'),
+                Text('Eastern: ${surfaceLocation["eastern"] ?? "0"}'),
+                Text('TVD: ${surfaceLocation["tvd"] ?? "0"}'),
               ],
             ),
           )),
@@ -89,9 +103,9 @@ class CalculationTable extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Northern: ${target["northern"]}'),
-                  Text('Eastern: ${target["eastern"]}'),
-                  Text('TVD: ${target["tvd"]}'),
+                  Text('Northern: ${target["northern"] ?? "0"}'),
+                  Text('Eastern: ${target["eastern"] ?? "0"}'),
+                  Text('TVD: ${target["tvd"] ?? "0"}'),
                 ],
               ),
             )),
@@ -201,9 +215,49 @@ class CalculationTable extends StatelessWidget {
   }
 
   double calculateKOP() {
-    // Implement the Medium Curvature or Build and Hold approach here
-    return 0.0; // Placeholder value, replace with actual calculation
+  // Helper function to safely parse double values and ensure they are not null
+  double parseOrDefault(String? value, double defaultValue) {
+    if (value == null || value.isEmpty) {
+      return defaultValue;
+    }
+    return double.tryParse(value) ?? defaultValue;
   }
+
+  // Retrieve surface location coordinates with default values (in feet)
+  double surfaceNorth = parseOrDefault(surfaceLocation["northern"], 0.0);
+  double surfaceEast = parseOrDefault(surfaceLocation["eastern"], 0.0);
+  double surfaceTVD = parseOrDefault(surfaceLocation["tvd"], 0.0);
+
+  double kop = surfaceTVD; // Initialize KOP with the surface TVD (in feet)
+
+  for (Map<String, String> target in targets) {
+    double targetNorth = parseOrDefault(target["northern"], surfaceNorth);
+    double targetEast = parseOrDefault(target["eastern"], surfaceEast);
+    double targetTVD = parseOrDefault(target["tvd"], surfaceTVD);
+
+    // Calculate the differences
+    double deltaNorth = targetNorth - surfaceNorth;
+    double deltaEast = targetEast - surfaceEast;
+    double deltaTVD = targetTVD - surfaceTVD;
+
+    // Calculate horizontal displacement (HD)
+    double HD = sqrt(deltaNorth * deltaNorth + deltaEast * deltaEast);
+
+    // Calculate inclination angle (theta) in degrees
+    double theta = atan(HD / deltaTVD) * (180 / pi);
+
+    // Calculate azimuth angle (phi) in degrees
+    double phi = atan(deltaEast / deltaNorth) * (180 / pi);
+
+    // Determine if this target results in a significant inclination change
+    if (theta > 0) {
+      kop = surfaceTVD; // Set KOP to the current TVD (or the corresponding MD in feet)
+      break; // Exit the loop once a significant change is detected
+    }
+  }
+
+  return kop; // The KOP value is guaranteed to be a non-nullable double in feet
+}
 
   List<Map<String, dynamic>> calculateWellPathData(double kop) {
     // Implement the Minimum Curvature method here

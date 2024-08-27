@@ -214,12 +214,51 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
               child: Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    // Switch to the "View Data" tab
-                    setState(() {
-                      _tabController.index = 1;
-                    });
-                  },
-                  child: Text("Data"),
+  // Show the dialog for interval input
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      TextEditingController intervalController = TextEditingController();
+
+      return AlertDialog(
+        title: Text("Enter Interval"),
+        content: TextField(
+          controller: intervalController,
+          decoration: InputDecoration(
+            labelText: "Interval",
+            hintText: "Enter the interval value",
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.number,
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              String interval = intervalController.text;
+
+              // Process the interval value if needed
+
+              // Switch to the "View Data" tab
+              setState(() {
+                _tabController.index = 1;
+              });
+
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: Text("OK"),
+          ),
+        ],
+      );
+    },
+  );
+},
+child: Text("Data"),
                 ),
               ),
             ),
