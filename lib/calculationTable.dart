@@ -259,12 +259,78 @@ class CalculationTable extends StatelessWidget {
   return kop; // The KOP value is guaranteed to be a non-nullable double in feet
 }
 
-  List<Map<String, dynamic>> calculateWellPathData(double kop) {
-    // Implement the Minimum Curvature method here
-    return [
-      {"md": 100, "inclination": 10, "azimuth": 180, "dogleg": 1.5},
-      {"md": 200, "inclination": 15, "azimuth": 185, "dogleg": 1.2},
-      // Add more data as needed
-    ]; // Placeholder data, replace with actual calculations
+  List<Map<String, dynamic>> calculateWellPathData(double kop, double interval) {
+  // Prepare the combined list of surface and target locations
+  List<Map<String, double>> locations = [
+    {
+      "northern": double.parse(surfaceLocation["northern"]!),
+      "eastern": double.parse(surfaceLocation["eastern"]!),
+      "tvd": double.parse(surfaceLocation["tvd"]!)
+    },
+    ...targets.map((target) => {
+      "northern": double.parse(target["northern"]!),
+      "eastern": double.parse(target["eastern"]!),
+      "tvd": double.parse(target["tvd"]!)
+    }).toList()
+  ];
+
+  List<Map<String, dynamic>> results = [];
+
+  for (int i = 0; i < locations.length - 1; i++) {
+    double startNorth = locations[i]["northern"]!;
+    double startEast = locations[i]["eastern"]!;
+    double startTVD = locations[i]["tvd"]!;
+    double endNorth = locations[i + 1]["northern"]!;
+    double endEast = locations[i + 1]["eastern"]!;
+    double endTVD = locations[i + 1]["tvd"]!;
+
+    double deltaN = endNorth - startNorth;
+    double deltaE = endEast - startEast;
+    double deltaTVD = endTVD - startTVD;
+
+    double totalDistance = sqrt(deltaN * deltaN + deltaE * deltaE + deltaTVD * deltaTVD);
+    int numPoints = (totalDistance / interval).ceil();
+
+    for (int j = 0; j <= numPoints; j++) {
+      double fraction = j / numPoints;
+      double md = sqrt(
+        pow(startNorth + fraction * deltaN, 2) +
+        pow(startEast + fraction * deltaE, 2) +
+        pow(startTVD + fraction * deltaTVD, 2)
+      );
+
+      double currentNorth = startNorth + fraction * deltaN;
+      double currentEast = startEast + fraction * deltaE;
+      double currentTVD = startTVD + fraction * deltaTVD;
+
+      double HD = sqrt(pow(currentNorth - startNorth, 2) + pow(currentEast - startEast, 2));
+      double inclination = atan2(HD, currentTVD - startTVD) * (180 / pi);
+      double azimuth = atan2(currentEast - startEast, currentNorth - startNorth) * (180 / pi);
+      if (azimuth < 0) {
+        azimuth += 360; // Ensure azimuth is in the range [0, 360)
+      }
+
+      double dogleg = 0;
+      if (results.isNotEmpty) {
+        double previousInclination = results.last["inclination"];
+        double previousAzimuth = results.last["azimuth"];
+        dogleg = sqrt(
+          pow(inclination - previousInclination, 2) +
+          pow(azimuth - previousAzimuth, 2)
+        );
+      }
+
+      results.add({
+        "md": md,
+        "inclination": inclination,
+        "azimuth": azimuth,
+        "dogleg": dogleg
+      });
+    }
   }
+
+  return results;
+}
+
+
 }
