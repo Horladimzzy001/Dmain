@@ -16,6 +16,10 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   };
   List<Map<String, TextEditingController>> _targets = [];
   TextEditingController _kopController = TextEditingController();
+  double Interval = 0.0; // or String _userInterval = '';
+  double interval = 0.0;
+  
+
 
   @override
   void initState() {
@@ -33,8 +37,10 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("PhiDrillSim"),
+        backgroundColor: Colors.white,
+        title: Image(image: AssetImage("assets/drill_logo.jpg"), height: 100, width: 100,),
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
@@ -63,6 +69,8 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
             }).toList(),
             kopEnabled: _kopEnabled,
             kopValue: double.tryParse(_kopController.text) ?? 0.0,
+            
+            interval: Interval,
           )
         ],
       ),
@@ -241,6 +249,9 @@ class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin
           ElevatedButton(
             onPressed: () {
               String interval = intervalController.text;
+              setState(() {
+      Interval = double.tryParse(interval) ?? 0.0;
+    });
 
               // Process the interval value if needed
 

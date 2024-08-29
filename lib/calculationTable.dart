@@ -7,12 +7,13 @@ class CalculationTable extends StatelessWidget {
   final List<Map<String, String>> targets;
   final bool kopEnabled;
   final double kopValue;
+  final double interval;
 
   CalculationTable({
     required this.surfaceLocation,
     required this.targets,
     required this.kopEnabled,
-    required this.kopValue,
+    required this.kopValue, required  this.interval,
   });
 
   @override
@@ -32,9 +33,9 @@ class CalculationTable extends StatelessWidget {
 
     // Calculate KOP if not provided
     double calculatedKop = kopEnabled ? kopValue : calculateKOP();
-
+    double Interval = interval;
     // Calculate measured depths, inclinations, azimuths, etc.
-    List<Map<String, dynamic>> calculatedData = calculateWellPathData(calculatedKop);
+    List<Map<String, dynamic>> calculatedData = calculateWellPathData(calculatedKop, Interval);
 
     return Scaffold(
       appBar: AppBar(
@@ -259,7 +260,7 @@ class CalculationTable extends StatelessWidget {
   return kop; // The KOP value is guaranteed to be a non-nullable double in feet
 }
 
-  List<Map<String, dynamic>> calculateWellPathData(double kop, double interval) {
+  List<Map<String, dynamic>> calculateWellPathData(double kop, double Interval) {
   // Prepare the combined list of surface and target locations
   List<Map<String, double>> locations = [
     {
@@ -289,7 +290,7 @@ class CalculationTable extends StatelessWidget {
     double deltaTVD = endTVD - startTVD;
 
     double totalDistance = sqrt(deltaN * deltaN + deltaE * deltaE + deltaTVD * deltaTVD);
-    int numPoints = (totalDistance / interval).ceil();
+    int numPoints = (totalDistance / Interval).ceil();
 
     for (int j = 0; j <= numPoints; j++) {
       double fraction = j / numPoints;
