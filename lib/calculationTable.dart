@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '2d_plot.dart';
 import "dart:math";
 
+import 'dart:convert';
+import 'dart:io';
+
 class CalculationTable extends StatelessWidget {
   final Map<String, String> surfaceLocation;
   final List<Map<String, String>> targets;
@@ -207,6 +210,7 @@ class CalculationTable extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               // Handle 3D Plot (to be implemented later)
+              saveUserData(data);
             },
             child: Text("3D Plot"),
           ),
@@ -214,6 +218,24 @@ class CalculationTable extends StatelessWidget {
       ),
     );
   }
+
+Future<void> saveUserData(List<Map<String, dynamic>> data) async {
+  // Specify the path where you want to save the file on your system
+  final directory = Directory('C:/Users/MASTER/Documents'); 
+
+  // Check if the directory exists, if not, create it
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
+  }
+
+  // Create the file in the specified directory
+  final file = File('${directory.path}/user_data.json');
+
+  // Write the data to the file in JSON format
+  await file.writeAsString(jsonEncode(data));
+
+  print('File saved to ${file.path}');
+}
 
   double calculateKOP() {
   // Helper function to safely parse double values and ensure they are not null
